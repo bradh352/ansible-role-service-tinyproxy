@@ -1,0 +1,36 @@
+---
+- name: "APT: Install dependencies"
+  ansible.builtin.apt:
+    pkg:
+      - "tinyproxy"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: "DNF: Install dependencies"
+  ansible.builtin.dnf:
+    name:
+      - "tinyproxy"
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: "Set some system-specific facts"
+  set_fact:
+    tinyproxy_data_dir: "/usr/share/tinyproxy/"
+
+- name: "Write tinyproxy configuration"
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/tinyproxy/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "644"
+  with_items:
+    - "tinyproxy.conf"
+    - "filter"
+  notify: restart_tinyproxy
+
+- name: "Ensure tinyproxy is enabled and started"
+  service:
+    name: tinyproxy
+    state: started
+    enabled: yes
