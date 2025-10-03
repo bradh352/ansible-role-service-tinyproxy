@@ -29,6 +29,25 @@
     - "filter"
   notify: restart_tinyproxy
 
+- name: "UFW: enable port"
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  with_items:
+    - "{{ tinyproxy_port }}"
+  when: ansible_os_family == 'Debian'
+
+- name: "FirewallD: enable port"
+  firewalld:
+    immediate: yes
+    permanent: yes
+    port: "{{ item }}/tcp"
+    state: enabled
+  with_items:
+    - "{{ tinyproxy_port }}"
+  when: ansible_os_family == 'RedHat'
+
 - name: "Ensure tinyproxy is enabled and started"
   service:
     name: tinyproxy
